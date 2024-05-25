@@ -1,0 +1,58 @@
+Accelerator "bvh"
+Integrator "mlt"
+
+Film "image" "integer xresolution" [800] "integer yresolution" [600]
+  "string filename" "f3-18.exr"
+
+LookAt 0 0 -10 0 0 0 0 1 0
+Camera "perspective" "float fov" [30]
+
+Sampler "halton" "integer pixelsamples" [512]
+
+WorldBegin
+
+AttributeBegin
+Rotate 90 0 0 1
+LightSource "infinite" 
+ "string mapname" ["textures/sky.exr"]
+	"color scale" [1 1 1]
+AttributeEnd
+
+LightSource "distant" "point from" [-2. 1 -4 ] "blackbody L" [5000 5]
+
+Texture "grid" "color" "imagemap" "string filename" "textures/lines.exr"
+  "float vscale" .075
+Texture "grid-scaled" "color" "scale" "texture tex1" "grid"
+   "color tex2" [.4 .4 .4]
+   
+Material "uber" "texture Kd" "grid-scaled" "color Ks" [.5 .5 .5]
+   "float roughness" [.04]
+
+AttributeBegin
+Translate -1.75 0 0
+Rotate 45 0 0 1
+Shape "curve" "point P" [ -2 -1 -1  2 2 0    -2 -2 0    2 1 -1 ]
+   "float width0" [.35] "float width1" [.15]
+AttributeEnd
+
+AttributeBegin
+Translate 0 0 0
+Rotate 45 0 0 1
+Shape "curve" "point P" [ -2 -1 -1  2 2 0    -2 -2 0    2 1 -1 ]
+   "float width0" [.35] "float width1" [.15] "string type" "cylinder"
+AttributeEnd
+
+AttributeBegin
+Translate 1.75 0 0
+Rotate 45 0 0 1
+Shape "curve" "point P" [ -2 -1 -1  2 2 0    -2 -2 0    2 1 -1 ]
+   "float width0" [.35] "float width1" [.15] "string type" "ribbon"
+   "normal N" [ -.1 0 1   -.7 .1 .4 ]
+AttributeEnd
+
+# ground plane
+Material "matte" "color Kd" [.2 .2 .2]
+Shape "trianglemesh" "point P" [-100 -100 0.5    100 -100 0.5  100 100 0.5  -100 100 0.5 ]
+	"integer indices" [ 0 1 2 2 3 0 ]
+
+WorldEnd

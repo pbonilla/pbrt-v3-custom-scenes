@@ -1,0 +1,590 @@
+<meta charset="utf-8" lang="en"><style class="fallback">body{visibility:hidden;}</style>
+
+# Overview
+
+This repository includes a number of example scenes and
+data for use with the [pbrt-v3](https://github.com/mmp/pbrt-v3) renderer,
+which corresponds to the system described in the third edition of
+_Physically Based Rendering_, by Matt Pharr, Wenzel Jakob, and Greg
+Humphreys. (See also the [pbrt website](http://pbrt.org).)
+
+We hope that this data will be useful to users of `pbrt`, developers making
+changes to the system, and researchers in rendering. To our knowledge, all
+of these scenes and data can be used fairly freely. Some data is licensed
+under a Creative Commons Attribution license; see details in 
+Section [Overview of Scenes] of this document. 
+
+For more information about how to convert scenes to `pbrt`'s format, see
+the [pbrt User's
+Guide](http://pbrt.org/users-guide.html#Converting_Scenes_to_pbrts_Format_0).
+
+# Data Sets
+
+In addition to example scenes, there is some useful data for use with the
+system.
+
+* [bsdfs/](bsdfs/): this directory includes a variety of bidirectional scattering
+  distribution functions (BSDFs) for use with the `FourierMaterial`. See, for
+  example, the [coffee-splash](coffee-splash) scene for use of such a BSDF in a scene.
+  * New versions of BSDFs for use with `FourierMaterial` can be generated
+    with [layerlab](https://github.com/wjakob/layerlab/).
+
+* [lenses/](lenses/): lens description files for a handful of real-world lens
+  systems, for use with the `RealisticCamera`. See the scenes
+  [villa/villa-photons.pbrt](villa/villa-photons.pbrt) and
+  [sanmiguel/f6-17.pbrt](sanmiguel/f6-17.pbrt) for examples of their use.
+
+* [spds/](spds/): measured spectral power distributions for a variety of standard
+  illuminants, light sources, metals, and the squares of the Macbeth color
+  checker.
+
+# Scenes
+
+A variety of scenes are available, ranging from simple ones that show off
+an individual feature of the system, to more interesting ones that
+demonstrate complex lighting effects in scenes with detailed geometry and
+realistic reflection models.
+
+Scene files for many of the rendered figures in the book are included here;
+for example, [dragon/f11-13.pbrt](dragon/f11-13.pbrt) corresponds to Figure
+11.13 in the third edition of the book.
+
+## Directory Organization
+
+We've tried to organize all of the scene directories in a consistent
+manner; each scene directory is self-contained, containing all of the
+geometry, textures, and additional data needed to render the scene.
+
+With a few exceptions, each `*.pbrt` file in a scene directory represents a
+separate variant of the scene to be rendered (possibly with different light
+source configurations, different camera positions, etc.)  Some scenes have
+`geometry.pbrt`, `lights-*.pbrt` and `materials.pbrt` files that collect
+common geometry and material definitions across these variants. Thus, you
+should be able to just run `pbrt scene-name.pbrt` for any of the remaining
+`*.pbrt` files to render the corresponding scene.
+
+Complex triangle meshes and other complex geometry is stored in the
+`geometry/` directories and texture maps are all in the respective
+`textures/` directories. (Similarly, any SPDs, realistic camera lenses,
+or BSDF files are stored in corresponding sub-directories.)
+
+The [images/](images/) directory (which has a structure that parallels that
+of the scene directories) has EXR and PNG files corresponding to the final
+output from rendering each corresponding scene. All PNGs were generated
+using the `imgtool` program from the `pbrt-v3` distribution; many had a
+scale factor applied with the `--scale` command-line option, and a number
+include a bit of bloom to improve visual realism (via the `--bloomlevel` 
+and related command-line options.) Sometimes the corresponding `*.pbrt`
+file has a comment under the `Film` directive with the command line options
+that were used for `imgtool`.
+
+## A Note about Clamped Sample Values
+
+Some of these scenes have very difficult-to-sample light transport paths
+that in turn cause high variance, which manifests itself as scattered very
+bright pixels in images (often called "fireflies").  (For example, scenes
+with bumpy specular surfaces that are illuminated by realistic sky environment
+maps suffer from this issue when a path intersects the specular surface and
+is then scattered such that it happens to intersect the sun.)
+
+There is an option for pbrt's Film implementation that allows the user to
+specify a maximum value for the luminance of any sample added to the film;
+if enabled, any sample with a larger luminance has its luminance scaled
+down so that it is equal to the maximum. In turn, the impact of fireflies
+in images can be greatly reduced.
+
+We have used this option for a number of challenging scenes in the
+following. As such, **bias has been introduced into the the images that
+pbrt generates for those scenes**. We highlight this issue for two reasons:
+first, if you want to use those scenes as unbiased comparisons to another
+rendering system or to your implementation of a new light transport
+algorithm, it's important to be aware of this (and likely, to modify the
+scene files to disable this setting). Second, if you're developing a new
+light transport algorithm, these scenes provide a number of challenging
+situations that current algorithms don't handle well; new algorithms that
+handle them effectively would be useful contributions to rendering.
+
+## Overview of Scenes
+
+(##) Barcelona Pavilion
+
+![](images/barcelona-pavilion/pavilion-day.png height="200px")
+
+![](images/barcelona-pavilion/pavilion-night.png height="200px")
+
+[barcelona-pavilion](barcelona-pavilion): Model of van der Rohe's classic
+[Barcelona Pavilion](https://en.wikipedia.org/wiki/Barcelona_Pavilion),
+including both daytime and nighttime lighting setups. In the daytime setup,
+all illumination comes from a realistic sky model encoded in an HDR
+environment map. The night model has a very dark sky map and a number of
+area light sources; it is particularly challenging to render, as much of
+the illumination travels through one or more layers of glass before hitting
+a surface.
+
+barcelona-pavilion: Thanks to [Hamza Cheggour](http://www.emirage.org), who
+created this [great
+model](http://www.emirage.org/2013/04/24/free-download-archviz-project-pabellon-barcelona-3d-scene-v1-2-updated/)
+and made it available via a
+[CC-BY](https://creativecommons.org/licenses/by/2.0/) license.
+
+(##) Bathroom
+
+![](images/bathroom/bathroom.png height="200px")
+
+[bathroom](bathroom): Modern bathroom with soft indirect lighting and
+depth of field. Given the mirrors and bright wight walls, multi-bounce
+indirect illumination has a substantial effect on the overall appearance
+of the scene.
+
+Thanks to "nacimus", who made this scene available under the
+[CC-BY](https://creativecommons.org/licenses/by/2.0/) license. Downloaded
+from [Blendswap](http://www.blendswap.com/blends/view/73937).
+
+(##) BMW M6
+
+![](images/bmw-m6/bmw-m6.png height="200px")
+
+[bmw-m6](bmw-m6): BMW M6 car (model year 2006) illuminated by a realistic
+skylight model.
+
+Thanks to Fred C. M'ule Jr. ("tyrant monkey" on BlendSwap) for this nice
+car model. [CC-Zero](https://creativecommons.org/publicdomain/zero/1.0/)
+(public domain) license. Downloaded from
+[Blendswap](http://www.blendswap.com/blends/view/3557).
+
+(##) Breakfast
+
+![](images/breakfast/breakfast-lamps.png height="200px")
+
+[breakfast](breakfast): Indoor scene with chairs around a table. One
+variant of the scene has light streaming in through blinds from the side
+such that most of the scene is only illuminated indirectly; finding these
+indirect illumination paths can be challenging.  Another variant is only
+illuminated by the lights above the table; handling the resulting light
+transport through the glass light fixtures is a good challenge for many
+light transport algorithms.
+
+Thanks to "Wig42", who made this scene available under a
+[CC-BY](https://creativecommons.org/licenses/by/2.0/) license. Downloaded
+from [Blendswap](http://www.blendswap.com/blends/view/75431).
+
+(##) Buddha Fractal
+
+![](images/buddha-fractal/buddha-fractal.png height="200px")
+
+[buddha-fractal](buddha-fractal): Stanford Buddha model made out of Stanford Buddha
+models. 25,250 instances, each with 29,890 triangles, giving a total
+geometric complexity of over 750 million triangles.
+
+Thanks for Guillermo M. Leal Llaguno for this fun variant
+of the Stanford Buddha model. (Buddha model courtesy [Stanford Computer
+Graphics Laboratory](http://graphics.stanford.edu/data/3Dscanrep/)).
+
+(##) Bunny Fur
+
+![](images/bunny-fur/f3-15.png height="200px")
+
+[bunny-fur](bunny-fur): Stanford Bunny with fur growing out of it, modeled using the
+new curve shape added to `pbrt` in the third edition of the book. Over
+1.5 million curves are used.
+
+Bunny model courtesy [Stanford Computer Graphics
+Laboratory](http://graphics.stanford.edu/data/3Dscanrep/).  Environment map
+thanks to [Bernhard Vogl](http://dativ.at/lightprobes/index.html).
+
+(##) Caustic Glass
+
+![](images/caustic-glass/f16-9c.png height="200px")
+
+[caustic-glass](caustic-glass): A delightfully complex caustic pattern that
+results from light being projected through a realistic model of a bumpy
+glass.
+
+Thanks to Simon Wendsche (https://byob.carbonmade.com/) for
+the model.
+
+(##) Chopper Titan
+
+![](images/chopper-titan/chopper-titan.png height="200px")
+
+[chopper-titan](chopper-titan): Shiny motorcycle sitting on a glossy
+surface, illuminated by a sunset.
+
+Thanks to julioras3d for this model;
+[CC-BY](https://creativecommons.org/licenses/by/2.0/) license. Downloaded
+from [Blendswap](http://www.blendswap.com/blends/view/67726).
+
+(##) Cloud
+
+![White cloud](images/cloud/cloud.png height="200px")
+
+![Smoky cloud](images/cloud/smoke.png height="200px")
+
+[cloud](cloud): One scene with a bright white cloud, showing the effect of
+multiple scattering in participating media, and another, with the same
+volume density but with much more absorption, leading to a much darker
+cloud.  The two images show the difference between highly-scattering and
+highly-absorptive media.
+
+Smoke dataset courtesy Duc Nguyen and Ron Fedkiw.  Skylight
+environment map courtesy Nolan Goodnight.
+
+(##) Coffee Splash
+
+![](images/coffee-splash/splash.png height="200px")
+
+[coffee-splash](coffee-splash): A splash of coffee in a cup with a spoon,
+rendered using a complex simulated BRDF for the cup and saucer, and
+multiple scattering in participating media inside the splash.
+
+Scene thanks to "guismo";
+[CC-BY](https://creativecommons.org/licenses/by/2.0/) license.  Downloaded
+from [Blendswap](http://www.blendswap.com/blends/view/56136). Environment
+thanks to [Bernhard Vogl](http://dativ.at/lightprobes/index.html).
+
+(##) Contemporary Bathroom
+
+![](images/contemporary-bathroom/contemporary-bathroom.png height="200px")
+
+[contemporary-bathroom](contemporary-bathroom): Another contemporary
+bathroom scene. This scene is quite challenging to render without visible
+noise: specular light transport by the large mirror and the 
+very small area light sources surrounded by glass in the light bulbs are
+difficult to render efficiently.
+
+Scene thanks to [Mareck](http://www.studios-cad.fr/galerie.html),
+[CC-Zero](https://creativecommons.org/publicdomain/zero/1.0/) (public
+domain) license.  "contemporary_china" texture used for wallpaper thanks to
+[Adam Charlts](http://subtlepatterns.com/contemporary-china/); texture
+contrast was increased for the render. "American_walnut_pxr128" wood
+texture courtesy [Pixar Animation
+studios](https://community.renderman.pixar.com/article/114/library-pixar-one-twenty-eight.html),
+[CC-BY](https://creativecommons.org/licenses/by/4.0/) license. Abstract
+print seen in mirror based on a smoke photograph by [Vanessa
+Pike-Russell](https://www.flickr.com/photos/lilcrabbygal/),
+[CC-BY](https://creativecommons.org/licenses/by/2.0/) license; the photo
+was inverted and contrast was adjusted for rendering.  Hurricane image used
+for photo on wall courtesy [NASA Goddard Space Flight
+Center](https://www.flickr.com/photos/gsfc),
+[CC-BY](https://creativecommons.org/licenses/by/2.0/) license.
+
+(##) Crown
+
+![](images/crown/crown.png height="200px")
+
+[crown](crown): Detailed model of the Austrian Imperial Crown, featuring an
+accurate reflection model for the gold metal surfaces, and many gems that
+refract light passing through them.
+
+This amazing model was created by Martin Lubich (http://www.loramel.net/).
+
+(##) Dam Break
+
+![](images/dambreak/dambreak0.png height="200px")
+![](images/dambreak/dambreak1.png height="200px")
+
+[dambreak](dambreak): two frames of a fluid simlulation from [Yining Karl
+Li](http://www.yiningkarlli.com)'s nifty [Ariel fluid
+simulator](http://www.yiningkarlli.com/projects/arielflip.html).
+
+(##) Dragon
+
+![](images/dragon/f9-3.png height="200px")
+
+[dragon](dragon): A scanned dragon model rendered with many different materials,
+showing off the visual differences between them.
+
+Dragon model courtesy Christian Schüller.  Environment map 
+thanks to [Bernhard Vogl](http://dativ.at/lightprobes/index.html).
+
+(##) Ecosystem
+
+![](images/ecosys/ecosys.png height="200px")
+
+[ecosys](ecosys): Fairly complex outdoor scene with many plants and trees,
+illuminated by an environment map. This scene was used for the cover image
+for the first edition of _Physically Based Rendering_.
+
+Scene from Deussen et al., [Realistic modeling and rendering of plant
+ecosystems](http://dl.acm.org/citation.cfm?id=280898).
+
+(##) Figures
+
+[figures](figures): A variety of fairly simple scenes used for figures in the book.
+
+(##) Ganesha
+
+![](images/ganesha/ganesha.png height="200px")
+
+[ganesha](ganesha): Very detailed scan of a small statue with over 4.3
+million triangles, illuminated by a few area light sources.
+
+Model scanned by Wenzel Jakob.
+
+(##) Hair
+
+![Curly hair](images/hair/curly-hair.png height="200px")
+
+![Straight hair](images/hair/straight-hair.png height="200px")
+
+[hair](hair): Hair geometry to show off the hair scattering model now
+available in pbrt, as described in [The Implementation of a
+Hair Scattering Model](http://pbrt.org/hair.pdf).
+
+Many thanks to [Cem Yuskel](http://www.cemyuksel.com/) for the hair
+geometry, which is licensed under a "no commercial use" license.
+
+(##) Head
+
+![](images/head/head.png height="200px")
+
+[head](head): Human head model with a realistic BSSRDF, showing the effect of
+subsurface scattering.
+
+Model thanks to Infinite Realities, Inc.,
+[CC-BY](https://creativecommons.org/licenses/by/2.0/) license.  Environment
+map thanks to [USC-ICT light probe image
+gallery](http://gl.ict.usc.edu/Data/HighResProbes/).
+
+(##) Killeroo
+
+![](images/killeroos/killeroo-gold.png height="200px")
+
+[killeroos](killeroos): The classic "killeroo" model, in a variety of settings.
+
+Thanks to [headus](http://www.headus.com/au)/Rezard for the model.
+
+(##) Landscape
+
+![](images/landscape/view-0.png height="200px")
+
+![](images/landscape/view-1.png height="200px")
+
+![](images/landscape/view-2.png height="200px")
+
+![](images/landscape/view-3.png height="200px")
+
+[landscape](landscape): Very complex realistic outdoor landscape scene,
+featuring 23,241 unique plant models.  Thanks to object instancing, the
+scene has a total geometric complexity of 3.1 billion triangles, even
+though only 24 million triangles need to be stored in memory. `view-0.pbrt`
+is the cover image of the third edition of the _Physically Based Rendering_
+book.
+
+Many thanks to Jan-Walter Schliep, Burak Kahraman, and Timm
+Dapper from [Laubwerk](http://www.laubwerk.com) for this amazing scene.
+
+(##) LTE Orb
+
+![Rough glass around gold](images/lte-orb/lte-orb-roughglass.png height="200px")
+
+![Silver around diffuse](images/lte-orb/lte-orb-silver.png height="200px")
+
+[lte-orb](lte-orb): Spherical orb with an inset spherical object. The
+geometric structure of the shapes involved provides a useful tool for
+visualizing the appearance of various materials.
+
+Thanks to Yasutoshi Mori (@MirageYM) for this model;
+[CC-BY](https://creativecommons.org/licenses/by/2.0/) license.
+
+(##) Measure One
+
+![](images/measure-one/frame25.png height="200px")
+
+![](images/measure-one/frame380.png height="200px")
+
+[measure-one](measure-one): A number of frames converted from Beeple's
+amazing [Zero-Day](https://vimeo.com/140163198) animation. Converted from
+Cinema4D files downloaded from [Beeple's
+website](http://www.beeple-crap.com/resources.php). (Note that the original
+materials and lighting is much better--improvements to our conversion 
+gratefully received!)
+
+[License]((http://beeple-crap.com/resources.php):
+"These files are available under a sort of "open source" concept. They are
+intended for educational use but really can be used for whatever the fuck
+you want. You don't need to credit me for whatever commercial or
+non-commercial use you make of them, but if you could shout me a holla with
+any project that do come from them, I'd love to see it :)"
+
+(##) PBRT Book
+
+![](images/pbrt-book/book.png height="200px")
+
+[pbrt-book](pbrt-book): A realistic model of the second edition of the _Physically
+Based Rendering_ book.
+
+Thanks to Karl Li (@yiningkarlli) for this fun model.
+
+(##) San Miguel
+
+![](images/sanmiguel/sanmiguel.png height="200px")
+
+[sanmiguel](sanmiguel): A complex model inspired by a hotel in San Miguel de
+Allende, Mexico.
+
+Thanks to Guillermo M. Leal Llaguno for this excellent scene.
+
+(##) Simple
+
+![](images/simple/anim-bluespheres.png height="200px")
+
+[simple](simple): A variety of relatively simple scenes.
+
+(##) Smoke Plume
+
+![](images/smoke-plume/plume-084.png height="200px")
+
+![](images/smoke-plume/plume-184.png height="200px")
+
+![](images/smoke-plume/plume-284.png height="200px")
+
+A few renderings of a smoke simulation around an obstacle using volume data
+generated using the simulator published with Kim et al.'s [Wavelet
+Turbulence for Fluid Simulation](https://www.cs.cornell.edu/~tedkim/wturb/)
+paper.
+
+(##) Sportscar
+
+![](images/sportscar/sportscar.png height="200px")
+
+[sportscar](sportscar): Sportscar model, in a variety of illumination settings,
+showing off the substantial differences in overall visual appearance that
+result.
+
+Excellent model and pbrt conversion courtesy of Yasutoshi Mori (@MirageYM);
+[CC-BY](https://creativecommons.org/licenses/by/2.0/) license.  Skylight
+environment maps courtesy Nolan Goodnight.
+
+(##) SSS Dragon
+
+![](images/sssdragon/dragon_10.png height="200px")
+
+[sssdragon](sssdragon): Dragon model rendered with subsurface scattering,
+where multiple scene description files show the visual effect of changing
+the density of the scattering medium.
+
+Dragon model courtesy [Stanford Computer Graphics
+Laboratory](http://graphics.stanford.edu/data/3Dscanrep/).  Environment map
+thanks to [Bernhard Vogl](http://dativ.at/lightprobes/index.html).
+
+(##) StructureSynth
+
+![](images/structuresynth/arcsphere.png height="200px")
+
+[structuresynth](structuresynth): A few interesting procedural scenes scenes converted
+from [Structure Synth](http://structuresynth.sourceforge.net) into
+`pbrt`'s format.
+
+Environment map thanks to [USC-ICT light probe image
+gallery](http://gl.ict.usc.edu/Data/HighResProbes/).
+
+(##) Transparent Machines
+
+![](images/transparent-machines/frame888.png height="200px")
+
+![](images/transparent-machines/frame542.png height="200px")
+
+[transparent-machines](transparent-machines): A variety of highly detailed
+glass shapes illuminated by skylight. For good results, upwards of 64 ray
+bounces are required.
+
+Models from frames of [@beeple](http://beeple-crap.com)'s amazing
+[Transparent Machines
+video](https://vimeo.com/78716671). [License]((http://beeple-crap.com/resources.php):
+"These files are available under a sort of "open source" concept. They are
+intended for educational use but really can be used for whatever the fuck
+you want. You don't need to credit me for whatever commercial or
+non-commercial use you make of them, but if you could shout me a holla with
+any project that do come from them, I'd love to see it :)"
+
+(##) TT Car
+
+![](images/tt/tt.png height="200px")
+
+[tt](tt): Audi TT car model.
+
+Thanks for Marko Dabrovic and Mihovil Odak for the car model.  Environment
+map thanks to [USC-ICT light probe image
+gallery](http://gl.ict.usc.edu/Data/HighResProbes/).
+
+(##) Veach Bidir
+
+![](images/veach-bidir/bidir.png height="200px")
+
+[veach-bidir](veach-bidir): A version of a classic scene with a variety of complex
+types of light transport developed by Eric Veach to show the value of
+bidirectional path tracing.
+
+(##) Veach MIS
+
+![](images/veach-mis/f14-13-mi.png height="200px")
+
+[veach-mis](veach-mis): Another scene based on one by Eric Veach, this one showing
+off the benefit of multiple importance sampling when rendering surfaces
+of varying glossiness illuminated by light sources of various sizes.
+
+(##) Villa
+
+![](images/villa/villa-daylight.png height="200px")
+
+[villa](villa): Modern indoor environment. The `villa-daylight.pbrt` version is
+particularly tricky to render, as all of the indoor lighting comes via
+specular paths from the outside through the windows.
+
+Many thanks to Florent Boyer for this scene.  Skylight environment
+map courtesy Nolan Goodnight.
+
+(##) VW Van
+
+![](images/vw-van/vw-van.png height="200px")
+
+[vw-van](vw-van): Volkswagen Van, illuminated by a HDR environment map.
+
+Model courtesy of
+[Greyscalegorilla](https://greyscalegorilla.com/gsg-free-model-pack-for-cinema-4d/),
+exported from Cinema4D using the [Cinema4D pbrt
+exporter](https://github.com/mmp/pbrt-v3/tree/master/exporters/cinema4d).
+
+(##) Volume Caustic
+
+![](images/volume-caustic/caustic.png height="200px")
+
+[volume-caustic](volume-caustic): A glass sphere in participating media, showing off a
+volumetric caustic--light being focused in the scattering medium after
+passing through the sphere.
+
+(##) White Room
+
+![](images/white-room/whiteroom-daytime.png height="200px")
+
+![](images/white-room/whiteroom-night.png height="200px")
+
+[white-room](white-room): Interior scene, with two illumination
+configurations. The daytime variant is primarily illuminated by light
+coming through the windows from the outdoors, while the nighttime version
+is illuminated by the two lights in the scene.
+
+Scene thanks to Jay Hardy,
+[CC-BY](https://creativecommons.org/licenses/by/2.0/) license. Downloaded
+from [Blendswap](http://www.blendswap.com/blends/view/41683).
+
+(##) Yeah Right
+
+![](images/yeahright/yeahright.png height="200px")
+
+[yeahright](yeahright): An unusual and intricate form on a glossy plate.
+
+"Interesting" shape generated by [Keenan
+Crane](http://www.cs.cmu.edu/~kmcrane/Projects/ModelRepository/).
+Environment map thanks to [USC-ICT light probe image
+gallery](http://gl.ict.usc.edu/Data/HighResProbes/).
+
+(##) WIP
+
+[wip](wip): This directory has a few scenes that aren't quite ready;
+renderings don't yet look great, parameters need tuning, etc. We'll try
+to get to this eventually, or if you're able to get them in good shape,
+please submit an update (see the following).
+
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;}</style><script src="html/markdeep.min.js"></script>
